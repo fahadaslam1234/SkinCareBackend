@@ -7,7 +7,7 @@ import joblib
 df = pd.read_csv('data/skincare_recommendations_comprehensive.csv')
 
 # Preprocess the data
-X = df[['condition', 'skin_feel', 'makeup_area', 'sunscreen_preference', 'body_concern']]
+X = df[['skin_conditions', 'skin_feel', 'ingredient_preferences']]
 y = df['product_name']
 
 # Vectorize the categorical columns
@@ -15,6 +15,9 @@ X = pd.get_dummies(X)
 
 # Split the dataset
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# X_train, X_test, y_train, y_test  are output variables
+# train_test_split splits the dataset into train and test
 
 # Train the model
 model = RandomForestClassifier(n_estimators=100, random_state=42)

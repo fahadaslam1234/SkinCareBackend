@@ -1,8 +1,10 @@
-exports.sendResponse = async (res, stautus_code, status, error, message, data) => {
-    res.status(stautus_code).json({
-        status,
-        error,
+exports.success = (res, data) => {
+    res.status(200).json(data);
+};
+
+exports.error = (res, message, status, error) => {
+    res.status(status || 500).json({
         message,
-        data
-    })
-}
+        error
+    });
+};

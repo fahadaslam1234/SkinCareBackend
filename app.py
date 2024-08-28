@@ -30,7 +30,8 @@ def recommend():
     recommended_product = {
         "product_name": product['product_name'],
         "product_description": product['product_description'],
-        "product_image_url": product['product_image_url']
+        "product_image_url": product['product_image_url'],
+        # "product_price" : product['product_price'],
     }
     
     return jsonify(recommended_product)

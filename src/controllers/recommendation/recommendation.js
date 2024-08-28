@@ -8,9 +8,9 @@ exports.getRecommendation = async (req, res) => {
     try {
         const result = await axios.post('http://localhost:5000/recommend', userInput);
         console.log(result.data);
-        console.log(res);
         return response.success(res, result.data);
     } catch (error) {
-        // return response.error(res, 'Error getting recommendations', 500, error.message);
+        console.error('Error getting recommendations:', error.message);
+        return response.error(res, 'Error getting recommendations', 500, error.message);
     }
 };
