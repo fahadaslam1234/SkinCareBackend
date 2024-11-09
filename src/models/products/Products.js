@@ -9,6 +9,7 @@ const productSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    price:String,
   },
   { timestamps: true }
 );

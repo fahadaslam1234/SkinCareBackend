@@ -31,6 +31,20 @@ exports.findUserByEmail = async (value) => {
     return 2;
   }
 };
+exports.findUserByUserName = async (value) => {
+  try {
+    let user = await User.findOne({ user_name: value });
+    console.log(user);
+    if (user) {
+      return user;
+    } else {
+      return false;
+    }
+  } catch (err) {
+    console.log(err.message);
+    return 2;
+  }
+};
 exports.findUserCustomField = async (field_name, value) => {
   try {
     let user = await User.findOne({ where: { [field_name]: value } });

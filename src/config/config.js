@@ -1,6 +1,5 @@
 var morgan = require("morgan");
 var bodyParser = require("body-parser");
-
 module.exports = async function (app, express) {
   try {
     app.use(morgan("dev"));
@@ -10,6 +9,7 @@ module.exports = async function (app, express) {
         "Access-Control-Allow-Headers",
         "x-www-form-urlencoded, Origin, X-Requested-With, Content-Type, Accept, Authorization, *"
       );
+      // res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, DELETE')
       if (req.method === "OPTIONS") {
         res.header(
           "Access-Control-Allow-Methods",
@@ -29,11 +29,11 @@ module.exports = async function (app, express) {
       })
     );
     app.use(express.json());
+    // app.use(express.urlencoded({ extended: true }));
     app.use("/uploads", express.static("uploads"));
 
     // route imports
-    require("../routes")(app);  // Ensure this line properly imports and applies the routes
-
+    require("../routes/index")(app);
     // DB connections
     require("../db/mongo_connection")();
   } catch (err) {

@@ -6,6 +6,7 @@ const {
   userNameAvailabilityCheck,
   sendEmail,
   phoneNumberAvailabilityCheck,
+  findUserByUserName
 } = require("../../helpers/utils");
 
 const bcrypt = require("bcrypt");
@@ -20,59 +21,39 @@ exports.registerUser = async (req, res, next) => {
   try {
     let {
       user_name,
-      name,
       email,
       password,
-      device_id,
-      role,
-      phone_number,
-      latitude,
-      longitude,
-      drone_model,
-      region,
-      distance,
-      tools,
-      license,
-      country_code,
-      currency,
-      compilence_details,
+      is_dermatologist
     } = req.body;
-    console.log(req.body, "nasn");
+    console.log(req.body,"..................")
     let emailCheck = await emailAvailabilityCheck(email);
     console.log(emailCheck);
     if (emailCheck == false) {
-      await sendResponse(res, 200, false, null, "Email taken!", {});
+      await sendResponse(res, 200, false, null, "User Already Exist!", {});
     } else {
       let userNameCheck = await userNameAvailabilityCheck(user_name);
       if (userNameCheck == false || userNameCheck == 2) {
-        await sendResponse(res, 200, false, null, "User Name taken!", {});
+        await sendResponse(res, 200, false, null, "User Already Exist!", {});
       } else {
-        let phoneNumberCheck = await phoneNumberAvailabilityCheck(phone_number);
-        if (phoneNumberCheck == false) {
-          await sendResponse(res, 200, false, null, "Phone Number taken!", {});
-        } else {
-          let location_array = [
-            {
-              lat: latitude,
-              long: longitude,
-            },
-          ];
-          let user_role = role.toLowerCase();
+          let document = null
+          if(req.file != undefined && req.file !=null){
+            document = req.file.path
+          }
+          let user_role = "user"
+          if(JSON.parse(is_dermatologist)){
+            user_role = "dermatologist"
+          }
+          
             let hashedPass = await bcrypt.hash(password, 10);
             password = hashedPass;
             let new_user = await User.create({
               user_name: user_name,
               email: email,
-              phone_number: phone_number,
-              name: name,
-              country_code: country_code,
-              location: location_array,
-              device_id: device_id,
-              currency: currency,
               password: password,
               role: user_role,
+              is_dermatologist:JSON.parse(is_dermatologist),
+              document:document
             });
-            console.log("new suser", new_user);
             if (new_user) {
               let token = await accessToken(new_user);
               await sendResponse(
@@ -94,7 +75,7 @@ exports.registerUser = async (req, res, next) => {
               );
             }
           
-        }
+        
       }
     }
   } catch (err) {
@@ -111,26 +92,18 @@ exports.registerUser = async (req, res, next) => {
 };
 exports.loginUser = async (req, res, next) => {
   try {
-    let { email, password, device_id } = req.body;
+    let { user_name, password } = req.body;
     console.log(req.body);
-    let user = await findUserByEmail(email);
+    let user = await findUserByUserName(user_name);
     console.log(user);
     if (user == false || user == 2) {
       await sendResponse(res, 200, false, null, "Invalid credentials", {});
     } else {
       if (await bcrypt.compare(password, user.password)) {
-        user.device_id = device_id;
         await user.save();
         let token = await accessToken(user);
         user.password = null;
-        if (user.profile_key) {
-          let url = await getSignedURL(user.profile_key);
-          console.log((url[0], "mm"));
-          user.profile_image = url[0];
-        } else {
-          user.profile_image =
-            "https://storage.googleapis.com/download/storage/v1/b/pilot-hunt/o/1677824886964-image_2023_01_04T10_25_39_286Z.png?generation=1677825037684178&alt=media";
-        }
+
         await sendResponse(res, 200, true, null, "User login successfully", {
           user,
           token,
@@ -321,5 +294,123 @@ exports.resetPassword = async (req, res, next) => {
     );
   }
 };
-
-
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    let users = await User.find();
+    if (users && users.length>0) {
+        await sendResponse(
+          res,
+          200,
+          true,
+          null,
+          "Data Retrieved Successfully..!",
+          users
+        );
+      
+    } else {
+      await sendResponse(res, 400, false, null, "Users Does not Exist..", {});
+    }
+  } catch (err) {
+    console.log(err);
+    await sendResponse(
+      res,
+      500,
+      false,
+      err.message,
+      "Something went wrong please try again later",
+      {}
+    );
+  }
+};
+exports.deleteUserByID = async (req, res, next) => {
+  try {
+    let {
+      user_id
+    } =req.body
+    let users = await User.findByIdAndDelete(user_id);
+    if (users) {
+        await sendResponse(
+          res,
+          200,
+          true,
+          null,
+          "User Deleted Successfully..!",
+          users
+        );
+      
+    } else {
+      await sendResponse(res, 400, false, null, "Users Does not Exist..", {});
+    }
+  } catch (err) {
+    console.log(err);
+    await sendResponse(
+      res,
+      500,
+      false,
+      err.message,
+      "Something went wrong please try again later",
+      {}
+    );
+  }
+};
+exports.getAllPendingDermatologist = async (req, res, next) => {
+  try {
+    let users = await User.find({status:"1"});
+    if (users && users.length>0) {
+        await sendResponse(
+          res,
+          200,
+          true,
+          null,
+          "User Deleted Successfully..!",
+          users
+        );
+      
+    } else {
+      await sendResponse(res, 400, false, null, "Users Does not Exist..", {});
+    }
+  } catch (err) {
+    console.log(err);
+    await sendResponse(
+      res,
+      500,
+      false,
+      err.message,
+      "Something went wrong please try again later",
+      {}
+    );
+  }
+};
+exports.approvedOrDisapprovedPendingDermatologist = async (req, res, next) => {
+  try {
+    let {
+      status,
+      user_id
+    } = req.body
+    let users = await User.findById(user_id);
+    if (users) {
+      users.status = status
+        await sendResponse(
+          res,
+          200,
+          true,
+          null,
+          "Action Taken Successfully..!",
+          users
+        );
+      
+    } else {
+      await sendResponse(res, 400, false, null, "Users Does not Exist..", {});
+    }
+  } catch (err) {
+    console.log(err);
+    await sendResponse(
+      res,
+      500,
+      false,
+      err.message,
+      "Something went wrong please try again later",
+      {}
+    );
+  }
+};

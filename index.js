@@ -1,15 +1,8 @@
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+require("dotenv").config({ path: "./src/env/.env" });
 const app = express();
+require("./src/config/config")(app, express);
 const port = process.env.PORT || 3001;
+app.listen(port, () => console.log(`listening on port ${port}`));
 
-app.use(cors());
-app.use(express.json());
-
-// Use the recommendation route
-const recommendationRouter = require('./src/routes/recommendation');
-app.use('/api/recommend', recommendationRouter);
-
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
+  
